@@ -30,3 +30,48 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include "prettyprint.hpp"
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace fassert {
+namespace impl {
+
+class AssertHelper
+{
+public:
+    AssertHelper(
+        const char* fn,
+        int line,
+        const char* func)
+      : mValues(),
+        mFile(fn),
+        mLine(line),
+        mFunc(func),
+        FASSERT_PINGPONG_A(*this),
+        FASSERT_PINGPONG_B(*this)
+    {}
+
+    ~AssertHelper();
+
+    AssertHelper& append(const char* msg, const std::string& x);
+    void what(const std::string& msg);
+
+private:
+    std::vector<std::pair<std::string, std::string>> mValues;
+    std::string mWhat;
+    std::string mFile;
+    int mLine;
+    std::string mFunc;
+
+public:
+    /*
+     * Ender of macro expansion
+     */
+    AssertHelper& FASSERT_PINGPONG_A;
+    AssertHelper& FASSERT_PINGPONG_B;
+};
+
+} // namespace impl
+} // namespace fassert

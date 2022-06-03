@@ -29,3 +29,39 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#ifndef FASSERT_HPP
+#define FASSERT_HPP
+
+#include "fassert.ipp"
+#include <functional>
+#include <memory>
+
+namespace fassert {
+
+class Finalizers
+{
+public:
+    static std::shared_ptr<Finalizers> singleton();
+
+public:
+    virtual ~Finalizers() =default;
+    virtual void register_finalizer(std::function<void()>) =0;
+};
+
+} // namespace fassert
+
+#define FASSERT_LIKELY(x) __builtin_expect(!!(x), 1)
+
+#define FASSERT_PINGPONG_A(x) \
+    FASSERT_PINGPONG_OP(x, B)
+#define FASSERT_PINGPONG_B(x) \
+    FASSERT_PINGPONG_OP(x, A)
+#define FASSERT_PINGPONG_OP(x, next) \
+    append(#x, pp::prettyPrint(x)). FASSERT_PINGPONG_##next
+
+#define FASSERT(cond) \
+    if (FASSERT_LIKELY(cond)) {} \
+    else ::fassert::impl::AssertHelper(__FILE__, __LINE__, __func__) \
+             .append("Condition", #cond). FASSERT_PINGPONG_A
+
+#endif /* FASSERT_HPP */
