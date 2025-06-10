@@ -33,6 +33,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <deque>
 #include <cstdlib>
 #include <cstdio>
+#include <iterator>
+
+#ifdef ENABLE_STD_FORMAT
+#include <format>
+using namespace std;
+#endif
+#ifdef ENABLE_FMTLIB
+#include <fmt/core.h>
+using namespace fmt;
+#endif
 
 using namespace std;
 
@@ -82,13 +92,7 @@ enum TriggerBehaviour
 
 TriggerBehaviour kTriggerBehaviour = ABORT;
 
-AssertHelper& AssertHelper::append(const char* msg, const std::string& x)
-{
-    mValues.push_back(std::make_pair(std::string(msg), x));
-    return *this;
-}
-
-void AssertHelper::what(const std::string& msg)
+void AssertHelper::what(const std::string_view& msg)
 {
     mWhat = msg;
 }
@@ -98,28 +102,16 @@ AssertHelper::~AssertHelper()
     finalize();
 
     string res;
-
+    auto it = std::back_inserter(res);
     if (!mWhat.empty()) {
-        res.append(mWhat);
+        it = format_to(it, "{}", mWhat);
     }
-    pp::prettyPrint(res, "\n");
+    it = format_to(it, "\n");
 
-    pp::prettyPrint(res, "  LOCATION: ");
-    res.append(mFile);
-    pp::prettyPrint(res, ":");
-    pp::prettyPrint(res, mLine);
-    pp::prettyPrint(res, "\n");
-
-    pp::prettyPrint(res, "  FUNCTION: ");
-    res.append(mFunc);
-    pp::prettyPrint(res, "\n");
-
-    for(int64_t i = 0, sz = mValues.size(); i < sz; ++i) {
-        pp::prettyPrint(res, "  ");
-        res.append(mValues[i].first);
-        pp::prettyPrint(res, ": ");
-        res.append(mValues[i].second);
-        pp::prettyPrint(res, "\n");
+    it = format_to(it, "  LOCATION: {}:{}\n", mFile, mLine);
+    it = format_to(it, "  FUNCTION: {}\n", mFunc);
+    for(auto const& x: mHints) {
+        it = format_to(it, "  {}\n", x);
     }
 
     fprintf(stderr, "Assertion fails: %s", res.c_str());

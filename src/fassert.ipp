@@ -30,10 +30,17 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "prettyprint.hpp"
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
+
+#ifdef ENABLE_STD_FORMAT
+#include <format>
+#endif
+#ifdef ENABLE_FMTLIB
+#include <fmt/core.h>
+#endif
 
 namespace fassert {
 namespace impl {
@@ -45,7 +52,7 @@ public:
         const char* fn,
         int line,
         const char* func)
-      : mValues(),
+    :   mHints(),
         mFile(fn),
         mLine(line),
         mFunc(func),
@@ -55,15 +62,31 @@ public:
 
     ~AssertHelper();
 
-    AssertHelper& append(const char* msg, const std::string& x);
-    void what(const std::string& msg);
+    template<class... Args>
+    requires (sizeof...(Args) > 0)
+    AssertHelper& append(::std::string_view fmt, Args&&... args) {
+#ifdef ENABLE_STD_FORMAT
+        mHints.push_back(::std::vformat(fmt, ::std::make_format_args(args...)));
+#endif
+#ifdef ENABLE_FMTLIB
+        mHints.push_back(::fmt::vformat(fmt, ::fmt::make_format_args(args...)));
+#endif
+        return *this;
+    }
+
+    AssertHelper& append(::std::string hint) {
+        mHints.push_back(::std::move(hint));
+        return *this;
+    }
+
+    void what(const std::string_view& msg);
 
 private:
-    std::vector<std::pair<std::string, std::string>> mValues;
-    std::string mWhat;
-    std::string mFile;
+    std::vector<std::string> mHints;
+    std::string_view mWhat;
+    std::string_view mFile;
     int mLine;
-    std::string mFunc;
+    std::string_view mFunc;
 
 public:
     /*

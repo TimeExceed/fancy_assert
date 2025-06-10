@@ -52,16 +52,17 @@ public:
 
 #define FASSERT_LIKELY(x) __builtin_expect(!!(x), 1)
 
-#define FASSERT_PINGPONG_A(x) \
-    FASSERT_PINGPONG_OP(x, B)
-#define FASSERT_PINGPONG_B(x) \
-    FASSERT_PINGPONG_OP(x, A)
-#define FASSERT_PINGPONG_OP(x, next) \
-    append(#x, pp::prettyPrint(x)). FASSERT_PINGPONG_##next
+#define FASSERT_PINGPONG_A(...) \
+    FASSERT_PINGPONG_OP(B __VA_OPT__(,) __VA_ARGS__)
+#define FASSERT_PINGPONG_B(...) \
+    FASSERT_PINGPONG_OP(A __VA_OPT__(,) __VA_ARGS__)
+#define FASSERT_PINGPONG_OP(next, ...) \
+    append(__VA_ARGS__). FASSERT_PINGPONG_##next
 
 #define FASSERT(cond) \
     if (FASSERT_LIKELY(cond)) {} \
     else ::fassert::impl::AssertHelper(__FILE__, __LINE__, __func__) \
-             .append("Condition", #cond). FASSERT_PINGPONG_A
+             .append("Condition: {}", #cond). FASSERT_PINGPONG_A
 
-#endif /* FASSERT_HPP */
+
+#endif

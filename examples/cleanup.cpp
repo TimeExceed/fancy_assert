@@ -14,7 +14,7 @@ int main() {
     // Assert triggers.
     // Before aborting, `cleanup()` will be invoked.
     FASSERT(x != 0)
-        (x);
+        ("x={}", x);
 
     return 0;
 }
