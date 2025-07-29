@@ -79,11 +79,11 @@ public:
         return *this;
     }
 
-    void what(const std::string_view& msg);
+    void what(std::string_view msg);
 
 private:
     std::vector<std::string> mHints;
-    std::string_view mWhat;
+    std::string mWhat;
     std::string_view mFile;
     int mLine;
     std::string_view mFunc;

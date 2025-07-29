@@ -92,7 +92,7 @@ enum TriggerBehaviour
 
 TriggerBehaviour kTriggerBehaviour = ABORT;
 
-void AssertHelper::what(const std::string_view& msg)
+void AssertHelper::what(std::string_view msg)
 {
     mWhat = msg;
 }
