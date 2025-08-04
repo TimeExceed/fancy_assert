@@ -37,11 +37,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef ENABLE_STD_FORMAT
 #include <format>
-using namespace std;
+using std::format_to;
 #endif
 #ifdef ENABLE_FMTLIB
 #include <fmt/core.h>
-using namespace fmt;
+using fmt::format_to;
 #endif
 
 using namespace std;
@@ -53,25 +53,56 @@ namespace {
 class FinalizersImpl: public Finalizers
 {
 public:
-    virtual void register_finalizer(function<void()> f) override
+    void register_finalizer(function<void(string_view)> f) override
     {
         mFinalizers.push_back(std::move(f));
     }
 
-    deque<function<void()>> mFinalizers;
+    void clear() override {
+        mFinalizers.clear();
+    }
+
+    deque<function<void(string_view)>> mFinalizers;
+
+    FinalizersImpl() {
+        register_finalizer([](string_view msg) {
+            fprintf(stderr, "Assertion fails: %s", msg.data());
+        });
+    }
 };
 
-void finalize()
+void finalize(string_view trigger_msg)
 {
     const shared_ptr<Finalizers>& fins = Finalizers::singleton();
     shared_ptr<FinalizersImpl> finsimpl = dynamic_pointer_cast<FinalizersImpl>(fins);
-    deque<function<void()>> finalizers;
+    deque<function<void(string_view)>> finalizers;
     std::swap(finalizers, finsimpl->mFinalizers);
     for(; !finalizers.empty(); finalizers.pop_front()) {
         auto const& f = finalizers.front();
-        f();
+        f(trigger_msg);
     }
 }
+
+enum TriggerBehaviour
+{
+    ABORT,
+    EXIT,
+    DO_NOTHING,
+};
+
+#ifdef ABORT_WHEN_TRIGGER
+TriggerBehaviour kTriggerBehaviour = ABORT;
+#else
+#ifdef EXIT_WHEN_TRIGGER
+TriggerBehaviour kTriggerBehaviour = EXIT;
+#else
+#ifdef DO_NOTHING_WHEN_TRIGGER
+TriggerBehaviour kTriggerBehaviour = DO_NOTHING;
+#else
+TriggerBehaviour kTriggerBehaviour = ABORT;
+#endif
+#endif
+#endif
 
 } // namespace
 
@@ -83,15 +114,6 @@ shared_ptr<Finalizers> Finalizers::singleton()
 
 namespace impl {
 
-enum TriggerBehaviour
-{
-    ABORT,
-    EXIT,
-    DO_NOTHING,
-};
-
-TriggerBehaviour kTriggerBehaviour = ABORT;
-
 void AssertHelper::what(std::string_view msg)
 {
     mWhat = msg;
@@ -99,8 +121,6 @@ void AssertHelper::what(std::string_view msg)
 
 AssertHelper::~AssertHelper()
 {
-    finalize();
-
     string res;
     auto it = std::back_inserter(res);
     if (!mWhat.empty()) {
@@ -114,7 +134,7 @@ AssertHelper::~AssertHelper()
         it = format_to(it, "  {}\n", x);
     }
 
-    fprintf(stderr, "Assertion fails: %s", res.c_str());
+    finalize(res);
     switch(kTriggerBehaviour) {
         case ABORT: abort();
         case EXIT: _Exit(1);

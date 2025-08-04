@@ -36,22 +36,26 @@ int main()
 }
 ```
 
-For some cases, programs must do some cleanups before aborting.
+In some cases, programs have to output the triggered message to a customized
+sink and then do some cleanups before aborting.
 
 ```c++
 #include "fassert.hpp"
+#include <spdlog/spdlog.h>
 
-void cleanup()
+void sink_to_spdlog(std::string_view msg)
 {
-    // do something
+    spdog::error("Assertion triggered: {}", msg);
+    spdlog::shutdown();
 }
 
 int main()
 {
-    fassert::Finalizers::singleton()->register_finalize(cleanup);
+    fassert::Finalizers::singleton()->clear(); // clear the default finalizer
+    fassert::Finalizers::singleton()->register_finalizer(sink_to_spdlog);
 
     // Assert triggers.
-    // Before aborting, `cleanup()` will be invoked.
+    // Before aborting, `sink_to_spdlog()` will be invoked.
     FASSERT(false);
 
     return 0;

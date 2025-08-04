@@ -8,10 +8,10 @@ add_executable(trigger
 )
 target_link_libraries(trigger fassert)
 
-add_executable(cleanup
-    cleanup.cpp
+add_executable(customized-sink
+    customized-sink.cpp
 )
-target_link_libraries(cleanup fassert)
+target_link_libraries(customized-sink fassert)
 
 add_executable(what
     what.cpp

@@ -1,3 +1,4 @@
+#pragma once
 /*
 BSD 3-Clause License
 
@@ -35,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fassert.ipp"
 #include <functional>
 #include <memory>
+#include <string_view>
 
 namespace fassert {
 
@@ -45,7 +47,8 @@ public:
 
 public:
     virtual ~Finalizers() =default;
-    virtual void register_finalizer(std::function<void()>) =0;
+    virtual void register_finalizer(std::function<void(std::string_view)>) =0;
+    virtual void clear() =0;
 };
 
 } // namespace fassert
