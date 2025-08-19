@@ -1,9 +1,9 @@
 #include "fassert.hpp"
-#include <cstdio>
+#include <iostream>
 
 void customized_sink(std::string_view msg) noexcept
 {
-    fprintf(stderr, "triggered msg to customized sink: %s\n", msg.data());
+    std::cerr << "triggered msg to customized sink: " << msg << std::endl;
 }
 
 int main() {
@@ -11,10 +11,10 @@ int main() {
     fassert::Finalizers::singleton()->register_finalizer(customized_sink);
 
     int x = 0;
-    // Assert triggers.
-    // Before aborting, `cleanup()` will be invoked.
     FASSERT(x != 0)
-        ("x={}", x);
+        .ctx("x={}", x);
+
+    std::cout << "You can't see me!" << std::endl;
 
     return 0;
 }

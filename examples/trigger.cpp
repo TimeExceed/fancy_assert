@@ -1,10 +1,13 @@
 #include "fassert.hpp"
+#include <iostream>
 
 int main() {
     int x = 0;
 
     FASSERT(x != 0)
-        ("x={}", x);
+        .ctx("x={}", x);
+
+    std::cout << "You can't see me!" << std::endl;
 
     return 0;
 }

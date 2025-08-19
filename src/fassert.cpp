@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using std::format_to;
 #endif
 #ifdef ENABLE_FMTLIB
-#include <fmt/core.h>
+#include <fmt/format.h>
 using fmt::format_to;
 #endif
 
@@ -104,7 +104,7 @@ TriggerBehaviour kTriggerBehaviour = ABORT;
 #endif
 #endif
 
-} // namespace
+}
 
 shared_ptr<Finalizers> Finalizers::singleton()
 {
@@ -112,14 +112,14 @@ shared_ptr<Finalizers> Finalizers::singleton()
     return sFinalizer;
 }
 
-namespace impl {
+namespace _impl {
 
-void AssertHelper::what(std::string_view msg)
+void _Assert::what(string_view msg)
 {
     mWhat = msg;
 }
 
-AssertHelper::~AssertHelper()
+_Assert::~_Assert()
 {
     string res;
     auto it = std::back_inserter(res);
