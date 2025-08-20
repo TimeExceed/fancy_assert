@@ -42,13 +42,16 @@ public:
         mLine(line),
         mFunc(func)
     {}
+    _Assert(const _Assert&) = delete;
+    _Assert& operator=(const _Assert&) = delete;
+    _Assert(_Assert&&) = default;
+    _Assert& operator=(_Assert&&) = default;
 
     ~_Assert();
 
     template<class... Args>
     requires (sizeof...(Args) > 0)
-    _Assert ctx(::std::string_view fmt, Args&&... args) && {
-
+    _Assert hint(::std::string_view fmt, Args&&... args) && {
 #ifdef ENABLE_STD_FORMAT
         auto m = ::std::vformat(fmt, ::std::make_format_args(args...));
 #endif
@@ -56,7 +59,7 @@ public:
         auto m = ::fmt::vformat(fmt, ::fmt::make_format_args(args...));
 #endif
         mHints.push_back(std::move(m));
-        return *this;
+        return std::move(*this);
     }
 
     void what(std::string_view msg);
@@ -71,9 +74,8 @@ private:
 
 }
 
-#define FASSERT_LIKELY(x) __builtin_expect(!!(x), 1)
-
 #define FASSERT(cond) \
-    if (FASSERT_LIKELY(cond)) {} \
-    else std::move(::fassert::_impl::_Assert(__FILE__, __LINE__, __func__)) \
-        .ctx("Condition: {}", #cond)
+    if (cond) [[likely]] {} \
+    else [[unlikely]] \
+        std::move(::fassert::_impl::_Assert(__FILE__, __LINE__, __func__)) \
+            .hint("Condition: {}", #cond)

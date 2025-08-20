@@ -5,7 +5,7 @@ int main() {
     int x = 0;
 
     FASSERT(x != 0)
-        .ctx("x={}", x)
+        .hint("x={}", x)
         .what("Something goes wrong!");
 
     std::cout << "You can't see me!" << std::endl;

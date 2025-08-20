@@ -67,6 +67,7 @@ public:
     FinalizersImpl() {
         register_finalizer([](string_view msg) {
             fprintf(stderr, "Assertion fails: %s", msg.data());
+            fflush(stderr);
         });
     }
 };

@@ -4,8 +4,9 @@ A really fancy assertion facility for C++.
 
 # Prerequisites
 
-A header `prettyprint.hpp` must be accessable in the include-dir,
-which can be found [here](https://github.com/TimeExceed/testa/tree/master/cpp).
+Either C++20 (for `std::vformat`, `std::make_format_args` and `std::format_to`) or [fmtlib](https://fmt.dev/) is required.
+* To use C++20, `ENABLE_STD_FORMAT` must be defined.
+* To use fmtlib, `ENABLE_FMTLIB` must be defined.
 
 # Usage
 
@@ -18,18 +19,31 @@ int main()
 
     // nothing happens
     FASSERT(x == 0)
-        (x);
+        .hint("x={}", x);
 
-    // assert triggers.
-    // and outputs `x` value, together with file name and line number
+    // the assert triggers, and outputs to stderr
+    //
+    // ```
+    // Assertion fails:
+    //   LOCATION: /media/data/personal/fancy_assert/examples/trigger.cpp:7
+    //   FUNCTION: main
+    //   Condition: x != 0
+    //   x=0
+    // ```
     FASSERT(x != 0)
-        (x);
+        .hint("x={}", x);
 
-    // assert triggers.
-    // and outputs `x` value, together with file name and line number
-    // with an error message.
+    // the assert triggers, and outputs to stderr with a customized explanation
+    //
+    // ```
+    // Assertion fails: Something goes wrong!
+    //   LOCATION: /media/data/personal/fancy_assert/examples/what.cpp:7
+    //   FUNCTION: main
+    //   Condition: x != 0
+    //   x=0
+    // ```
     FASSERT(x != 0)
-        (x)
+        .hint("x={}", x);
         .what("Something goes wrong!");
 
     return 0;
